@@ -12,34 +12,119 @@ var createTask = function(taskText, taskDate, taskList) {
     .addClass("m-1")
     .text(taskText);
 
-  //for editing task and saving it automatically 
-  $(".list-group").on("blur", "textarea", function(){
-    //Obtains textareas current value/text
-    var text = $(this)
-      .val()
-      .trim();
-    
-    //Get parents UL id's attribute
-    var status = $(this)
-      .closest(".list-group")
-      .attr("id")
-      .replace("list-","");
-    
-    //obtains task position in the list of other li elements
-    var index = $(this)
-      .closest(".list-group-item")
-      .index();
+  // append span and p element to parent li
+  taskLi.append(taskSpan, taskP);
 
-    tasks[status][index].text = text;
-    saveTasks();
 
-    var taskP = $("<p>")
-      .addClass("m-1")
-      .text(text);
+  // append to ul list on the page
+  $("#list-" + taskList).append(taskLi);
+};
 
-    $(this).replaceWith(taskP);
+var loadTasks = function() {
+  tasks = JSON.parse(localStorage.getItem("tasks"));
 
+  // if nothing in localStorage, create a new object to track all task status arrays
+  if (!tasks) {
+    tasks = {
+      toDo: [],
+      inProgress: [],
+      inReview: [],
+      done: []
+    };
+  }
+
+  // loop over object properties
+  $.each(tasks, function(list, arr) {
+    console.log(list, arr);
+    // then loop over sub-array
+    arr.forEach(function(task) {
+      createTask(task.text, task.date, list);
+    });
   });
+};
+
+var saveTasks = function() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  
+};
+
+// modal was triggered
+$("#task-form-modal").on("show.bs.modal", function() {
+  // clear values
+  $("#modalTaskDescription, #modalDueDate").val("");
+});
+
+// modal is fully visible
+$("#task-form-modal").on("shown.bs.modal", function() {
+  // highlight textarea
+  $("#modalTaskDescription").trigger("focus");
+});
+
+// save button in modal was clicked
+$("#task-form-modal .btn-primary").click(function() {
+  // get form values
+  var taskText = $("#modalTaskDescription").val();
+  var taskDate = $("#modalDueDate").val();
+
+  if (taskText && taskDate) {
+    createTask(taskText, taskDate, "toDo");
+
+    // close modal
+    $("#task-form-modal").modal("hide");
+
+    // save in tasks array
+    tasks.toDo.push({
+      text: taskText,
+      date: taskDate
+    });
+
+    saveTasks();
+  }
+});
+
+
+//Edit Task Functionality
+$(".list-group").on("click", "p" , function(){
+  var text = $(this)
+  .text()
+  .trim();
+
+  var textInput = $("<textarea>")
+    .addClass("form-control")
+    .val(text)
+    $(this).replaceWith(textInput);
+
+    textInput.trigger("focus");
+  
+  console.log(text);
+});
+
+//for editing task complete and saving it automatically 
+$(".list-group").on("blur", "textarea", function(){
+  //Obtains textareas current value/text
+  var text = $(this).val();
+  
+  //Get parents UL id's attribute
+  var status = $(this)
+    .closest(".list-group")
+    .attr("id")
+    .replace("list-", "");
+  
+  //obtains task position in the list of other li elements
+  var index = $(this)
+    .closest(".list-group-item")
+    .index();
+
+  tasks[status][index].text = text;
+  saveTasks();
+
+  var taskP = $("<p>")
+    .addClass("m-1")
+    .text(text);
+
+  $(this).replaceWith(taskP);
+
+});
 
   //For Editing Due Date 
   $(".list-group").on("click", "span", function(){
@@ -95,93 +180,7 @@ var createTask = function(taskText, taskDate, taskList) {
     
 
   });
-
-
-  // append span and p element to parent li
-  taskLi.append(taskSpan, taskP);
-
-
-  // append to ul list on the page
-  $("#list-" + taskList).append(taskLi);
-};
-
-var loadTasks = function() {
-  tasks = JSON.parse(localStorage.getItem("tasks"));
-
-  // if nothing in localStorage, create a new object to track all task status arrays
-  if (!tasks) {
-    tasks = {
-      toDo: [],
-      inProgress: [],
-      inReview: [],
-      done: []
-    };
-  }
-
-  // loop over object properties
-  $.each(tasks, function(list, arr) {
-    console.log(list, arr);
-    // then loop over sub-array
-    arr.forEach(function(task) {
-      createTask(task.text, task.date, list);
-    });
-  });
-};
-
-var saveTasks = function() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
   
-};
-//Edit Task Functionality
-$(".list-group").on("click", "p" , function(){
-  var text = $(this)
-  .text()
-    
-  var textInput = $("<textarea>")
-    .addClass("form-control")
-    .val(text)
-    $(this).replaceWith(textInput);
-    textInput.trigger("focus");
-  
-  console.log(text);
-});
-
-
-
-// modal was triggered
-$("#task-form-modal").on("show.bs.modal", function() {
-  // clear values
-  $("#modalTaskDescription, #modalDueDate").val("");
-});
-
-// modal is fully visible
-$("#task-form-modal").on("shown.bs.modal", function() {
-  // highlight textarea
-  $("#modalTaskDescription").trigger("focus");
-});
-
-// save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
-  // get form values
-  var taskText = $("#modalTaskDescription").val();
-  var taskDate = $("#modalDueDate").val();
-
-  if (taskText && taskDate) {
-    createTask(taskText, taskDate, "toDo");
-
-    // close modal
-    $("#task-form-modal").modal("hide");
-
-    // save in tasks array
-    tasks.toDo.push({
-      text: taskText,
-      date: taskDate
-    });
-
-    saveTasks();
-  }
-});
-
 // remove all tasks
 $("#remove-tasks").on("click", function() {
   for (var key in tasks) {
