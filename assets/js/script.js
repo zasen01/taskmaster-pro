@@ -34,12 +34,68 @@ var createTask = function(taskText, taskDate, taskList) {
     saveTasks();
 
     var taskP = $("<p>")
-    .addClass("m-1")
-    .text(text);
+      .addClass("m-1")
+      .text(text);
 
     $(this).replaceWith(taskP);
 
   });
+
+  //For Editing Due Date 
+  $(".list-group").on("click", "span", function(){
+    //obtains current text
+    var date = $(this)
+      .text()
+      .trim();
+    
+    //New input element creation
+    var dateInput = $("<input>")
+      .attr("type","text")
+      .addClass("form-control")
+      .val(date);
+
+    //Element Swap
+    $(this).replaceWith(dateInput);
+
+    //New Element auto focus
+    dateInput.trigger("focus");
+
+  });
+
+  //Value of Due Date was Changed 
+  $(".list-group").on("blur", "input[type='text']", function(){
+
+    //obtain current text
+    var date = $(this)
+      .val()
+      .trim();
+
+    //get parent ul's id attribute
+    var status = $(this)
+      .closest(".list-group")
+      .attr("id")
+      .replace("list-","");
+
+    //get task position in list of other li elements 
+    var index = $(this)
+      .closest(".list-group-item")
+      .index();
+
+    //update task in array and resavw to local storage
+    tasks[status][index].date = date;
+      saveTasks();
+
+    //recreate span element w/bootstrap classes
+    var taskSpan = $("<span>")
+      .addClass("badge badge-primary badge-pill")
+      .text(date);
+    
+    //replace w/span element 
+    $(this).replaceWith(taskSpan);
+    
+
+  });
+
 
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
